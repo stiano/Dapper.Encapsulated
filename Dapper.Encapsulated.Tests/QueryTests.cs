@@ -17,10 +17,12 @@ namespace Dapper.Encapsulated.Tests
         {
             var services = new ServiceCollection();
 
-            services.RegisterDapperEncapsulatedCache<DapperMemoryCacheProvider>();
-            services.RegisterDapperEncapsulatedConnection<UsersDbConnection>(new DbConnectionOptions
+            services.RegisterDapperEncapsulated(builder =>
             {
-                DbConnectionFactory = _ => new SqlConnection("ConnectionString"),
+                builder.Add<UsersDbConnection>(new DbConnectionOptions
+                {
+                    DbConnectionFactory = _ => new SqlConnection("ConnectionString"),
+                });
             });
 
             serviceProvider = services.BuildServiceProvider();
@@ -37,6 +39,7 @@ namespace Dapper.Encapsulated.Tests
     public class QueryTests : BaseQueryTest
     {
         [Test]
+        [Explicit]
         public async Task GetUsers()
         {
             var users = await connection.QueryAsync(new GetUsersQuery("joh"), CancellationToken.None);
