@@ -1,48 +1,17 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 
 namespace Dapper.Encapsulated.Tests
 {
-    public abstract class BaseQueryTest
-    {
-        protected UsersDbConnection connection;
-        protected IServiceProvider serviceProvider;
-
-        [SetUp]
-        public void SetUp()
-        {
-            var services = new ServiceCollection();
-
-            services.RegisterDapperEncapsulated(builder =>
-            {
-                builder.Add<UsersDbConnection>(new DbConnectionOptions
-                {
-                    DbConnectionFactory = _ => new SqlConnection("ConnectionString"),
-                });
-            });
-
-            serviceProvider = services.BuildServiceProvider();
-            connection = serviceProvider.GetRequiredService<UsersDbConnection>();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            (serviceProvider as IDisposable)?.Dispose();
-        }
-    }
-
+    [Explicit]
     public class QueryTests : BaseQueryTest
     {
         [Test]
-        [Explicit]
         public async Task GetUsers()
         {
-            var users = await connection.QueryAsync(new GetUsersQuery("joh"), CancellationToken.None);
+            var users = await connection.QueryAsync(new GetUsersQuery("t%"), CancellationToken.None);
+            users.ToConsole();
         }
     }
 
@@ -58,9 +27,9 @@ namespace Dapper.Encapsulated.Tests
         public string Sql => @"
 select 
     u.id, u.name 
-from User 
+from [User] u
 where 
-    u.signature like @filter
+    u.name like @filter
 ";
         public object Arguments => new
         {
